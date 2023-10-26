@@ -29,16 +29,23 @@ i.add_watch_recursive(path, mask, dirfilter)
 
 
 while True:
-    events = i.read(timeout=cleanup_ms)
-    logging.debug('loop: %s' % events)
-    if not events and EA_DIRS:
-        logging.info('cleanup time')
-        for name, parent in list(EA_DIRS):
-            eaDir = os.path.join(i.get_path(parent), name)
-            try:
-                logging.info('Deleting: %s' % eaDir)
-                shutil.rmtree(eaDir)
-            except OSError, e:
-                logging.exception('unknown issue')
-            finally:
-                EA_DIRS.discard((name, parent))
+    try:
+        events = i.read(timeout=cleanup_ms)
+        logging.info('loop: %s' % events)
+        if not events and EA_DIRS:
+            logging.info('cleanup time')
+            for name, parent in list(EA_DIRS):
+                eaDir = os.path.join(i.get_path(parent), name)
+                try:
+                    logging.info('Deleting: %s' % eaDir)
+                    if os.path.isfile(eaDir):
+                        os.remove(eaDir) # Handle .DS_Store
+                    else:
+                        shutil.rmtree(eaDir)
+                except OSError, e:
+                    logging.exception('unknown issue')
+                finally:
+                    EA_DIRS.discard((name, parent))
+    except OSError, e:
+        print(e)
+        logging.exception('inotify issue')
