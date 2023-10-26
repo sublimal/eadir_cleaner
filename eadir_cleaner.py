@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 blocklist = ['@eaDir', '.DS_Store']
 cleanup_ms=5000
 path = '/volume1'
+exclude = []
 mask = flags.CREATE #: Subfile was created
 
 EA_DIRS = set()
@@ -21,6 +22,11 @@ def dirfilter(name, parent, is_dir):
     if name in blocklist:
         logging.info('Found: %s' % name)
         EA_DIRS.add((name, parent))
+    if exclude and parent > 0:
+        full_path = os.path.join(i.get_path(parent), name)
+        if full_path in exclude:
+            logging.info('excluding: %s' % full_path)
+            return False
     return True
 
 i = INotify()
